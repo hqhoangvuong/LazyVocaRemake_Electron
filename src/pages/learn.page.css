@@ -1,0 +1,20 @@
+.learn-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.learn-header {
+  padding-left: 0px;
+}
+
+.learn-main-content {
+  flex: 1;
+  padding-left: 10px;
+  text-align: left;
+}
+
+.stick-to-bottom {
+  width: 95%;
+  position: fixed;
+  bottom: 5px;
+}
