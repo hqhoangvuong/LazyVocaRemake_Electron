@@ -75,6 +75,7 @@ function Login() {
 
   const inputStyle = {
     marginBottom: '1rem',
+    color: 'gray',
   };
 
   return (
@@ -107,7 +108,7 @@ function Login() {
             {appNotifyMsg}
           </Alert>
         </Snackbar>
-        <h1>Welcome to Lazy Voca</h1>
+        <h1 style={{ color: 'gray' }}>Welcome</h1>
         <TextField
           required
           label="User name"
@@ -117,7 +118,6 @@ function Login() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           style={inputStyle}
-          sx={{ input: { color: 'white' } }}
         />
         <TextField
           required
@@ -128,24 +128,12 @@ function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={inputStyle}
-          sx={{
-            input: { color: 'white' },
-          }}
         />
-        <FormControlLabel
+        {/* <FormControlLabel
           style={inputStyle}
           label="Keep me logged in"
-          control={
-            <Checkbox
-              sx={{
-                color: '#FFFFFF',
-                '&.Mui-checked': {
-                  color: '#FFFFFF',
-                },
-              }}
-            />
-          }
-        />
+          control={<Checkbox />}
+        /> */}
         <Button variant="contained" color="primary" onClick={handleLogin}>
           Login
         </Button>
@@ -156,7 +144,7 @@ function Login() {
             alignItems: 'center',
           }}
         >
-          <h4>Or click here to sign in</h4>
+          {/* <h4>Or click here to sign in</h4> */}
         </div>
       </form>
     </div>

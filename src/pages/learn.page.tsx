@@ -192,15 +192,15 @@ function Learn() {
         elevation={3}
       >
         <div style={{ paddingLeft: '10px', color: 'white' }}>
-          <h1 style={{ color: 'purple' }}>{word}</h1>
-          <h3>{ipa}</h3>
+          <h2 style={{ color: 'purple' }}>{word}</h2>
+          <p style={{ color: '#656565' }}>{ipa}</p>
         </div>
         <div
           style={{ paddingLeft: '25px', paddingRight: '10px', color: 'white' }}
         >
-          <p style={{ color: '#FFFF00' }}>{meaning}</p>
-          <p style={{ color: 'cyan' }}>{examples} </p>
-          <p>{translate}</p>
+          <p style={{ color: '#6A359D' }}>{meaning}</p>
+          <p style={{ color: '#1D3C8E' }}>{examples} </p>
+          <p style={{ color: '#177245' }}>{translate}</p>
         </div>
       </Paper>
 
