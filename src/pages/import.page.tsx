@@ -1,40 +1,35 @@
+import { Box, Button, TextField } from '@mui/material';
 import React, { useState } from 'react';
-import TextField from '@mui/material/TextField';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { xonokai } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import JSON5 from 'json5';
+import { useNavigate } from 'react-router-dom';
 
 function Import() {
-  const [jsonText, setJsonText] = useState('');
-  const [highlightedJson, setHighlightedJson] = useState('');
+  const navigate = useNavigate();
 
-  const handleTextChange = (event) => {
-    const inputText = event.target.value;
-
-    // Attempt to parse JSON using json5 (handles both JSON and JavaScript objects)
-    try {
-      const parsedJson = JSON.stringify(JSON5.parse(inputText), null, 2);
-      setJsonText(inputText);
-      setHighlightedJson(parsedJson);
-    } catch (error) {
-      setJsonText(inputText);
-      setHighlightedJson('Invalid JSON');
-    }
+  const changeWindowSide = () => {
+    window.electron.ipcRenderer.resizeWindowToImport();
   };
+
+  const cancelAndGoBack = () => {
+    navigate('/learn');
+    window.electron.ipcRenderer.resizeWindowToLearn();
+  };
+
+  changeWindowSide();
 
   return (
     <div>
-      <TextField
-        label="JSON Input"
-        variant="outlined"
-        multiline
-        fullWidth
-        value={jsonText}
-        onChange={handleTextChange}
-      />
-      <SyntaxHighlighter language="json" style={xonokai}>
-        {highlightedJson}
-      </SyntaxHighlighter>
+      <Box>
+        <TextField />
+      </Box>
+      <Box sx={{ '& button': { m: 1 } }}>
+        <h1>Import new word(s)</h1>
+        <Button variant="contained" color="success">
+          Import Vocabulary
+        </Button>
+        <Button variant="contained" color="error" onClick={cancelAndGoBack}>
+          Cancel
+        </Button>
+      </Box>
     </div>
   );
 }

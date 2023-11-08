@@ -21,6 +21,12 @@ const electronHandler = {
     once(channel: Channels, func: (...args: unknown[]) => void) {
       ipcRenderer.once(channel, (_event, ...args) => func(...args));
     },
+    resizeWindowToImport() {
+      ipcRenderer.send('ipc-change-windows-size-import');
+    },
+    resizeWindowToLearn() {
+      ipcRenderer.send('ipc-change-windows-size-learn');
+    },
   },
 };
 

@@ -31,6 +31,19 @@ ipcMain.on('ipc-example', async (event, arg) => {
   event.reply('ipc-example', msgTemplate('pong'));
 });
 
+ipcMain.on('ipc-change-windows-size-import', async (event, arg) => {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+
+  mainWindow?.setSize(800, 600);
+  mainWindow?.setPosition(width - 800, height - 600);
+});
+
+ipcMain.on('ipc-change-windows-size-learn', async (event, arg) => {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+
+  mainWindow?.setSize(400, 450);
+  mainWindow?.setPosition(width - 400, height - 450);
+});
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();

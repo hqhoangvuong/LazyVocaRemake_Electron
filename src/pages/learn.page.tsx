@@ -6,6 +6,9 @@ import {
   BottomNavigationAction,
   Box,
   Paper,
+  Popover,
+  Rating,
+  Typography,
 } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
@@ -45,6 +48,10 @@ speech
 function Learn() {
   const navigate = useNavigate();
 
+  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
+    null,
+  );
+
   const [muted, setMuted] = useState<boolean>(false);
 
   const [word, setWord] = useState<string>('');
@@ -52,7 +59,7 @@ function Learn() {
   const [meaning, setMeaning] = useState<string>('');
   const [examples, setExamples] = useState<string>('');
   const [translate, setTranslate] = useState<string>('');
-
+  const [complexity, setComplexcity] = useState<number>(0);
   const [moveNext, setMoveNext] = useState<number>(0);
 
   const { token } = useAuth();
@@ -89,6 +96,7 @@ function Learn() {
         setMeaning(response.data.meaning);
         setExamples(response.data.example);
         setTranslate(response.data.translation);
+        setComplexcity(response.data.complexity);
 
         await speech.speak({
           text: `Word: ${response.data.word}. Meaning: ${response.data.meaning}. Examples: ${response.data.example}`,
@@ -107,6 +115,24 @@ function Learn() {
     }
   };
 
+  const handleEasinessEditOpen = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleEasinessEditClose = () => {
+    setAnchorEl(null);
+  };
+
+  const updateEasiness = (newValue: number) => {
+    console.log(newValue);
+    // call API here
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? 'simple-popover' : undefined;
+
   useEffect(() => {
     const fetchDataInterval = setInterval(() => {
       fetchData();
@@ -116,6 +142,7 @@ function Learn() {
 
     return () => {
       clearInterval(fetchDataInterval);
+      speech.cancel();
     };
   }, [moveNext]);
 
@@ -157,7 +184,34 @@ function Learn() {
             icon={muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
             onClick={toggleMute}
           />
-          <BottomNavigationAction label="Easiness" icon={<SettingsIcon />} />
+          <BottomNavigationAction
+            label="Easiness"
+            icon={<SettingsIcon />}
+            onClick={handleEasinessEditOpen}
+          />
+          <Popover
+            id={id}
+            open={open}
+            anchorEl={anchorEl}
+            onClose={handleEasinessEditClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+          >
+            <Typography sx={{ p: 2 }}>Rate with your taste.</Typography>
+            <Rating
+              name="simple-controlled"
+              value={complexity}
+              onChange={(event, newValue) => {
+                if (newValue) {
+                  updateEasiness(newValue);
+                  setComplexcity(newValue);
+                  handleEasinessEditClose();
+                }
+              }}
+            />
+          </Popover>
           <BottomNavigationAction
             label="Import"
             icon={<PublishIcon />}

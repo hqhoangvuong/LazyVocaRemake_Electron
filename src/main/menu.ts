@@ -194,6 +194,13 @@ export default class MenuBuilder {
   buildDefaultTemplate() {
     const templateDefault = [
       {
+        label: 'Change Window Size',
+        click: () => {
+          // Change the window size
+          this.mainWindow.setSize(1024, 768);
+        },
+      },
+      {
         label: '&File',
         submenu: [
           {
