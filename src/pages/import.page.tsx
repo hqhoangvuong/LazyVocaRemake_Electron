@@ -1,4 +1,4 @@
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, TextField, TextareaAutosize } from '@mui/material';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,12 +17,26 @@ function Import() {
   changeWindowSide();
 
   return (
-    <div>
-      <Box>
-        <TextField />
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: '750px',
+        minHeight: '550px',
+        margin: 'auto',
+      }}
+    >
+      <Box sx={{ m: 1 }}>
+        <h1>Import new word(s)</h1>
+        <TextareaAutosize
+          aria-label="empty textarea"
+          minRows={25}
+          maxRows={25}
+          placeholder="Enter your text here"
+          style={{ width: '100%', height: '100%' }}
+        />
       </Box>
       <Box sx={{ '& button': { m: 1 } }}>
-        <h1>Import new word(s)</h1>
         <Button variant="contained" color="success">
           Import Vocabulary
         </Button>

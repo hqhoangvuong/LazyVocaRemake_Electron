@@ -15,8 +15,9 @@ import {
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import FeedbackIcon from '@mui/icons-material/Feedback';
-import SettingsIcon from '@mui/icons-material/Settings';
+import ThumbsUpDownIcon from '@mui/icons-material/ThumbsUpDown';
 import PublishIcon from '@mui/icons-material/Publish';
+import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import Speech from 'speak-tts';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -72,7 +73,7 @@ function Learn() {
     setMuted(!muted);
     if (!muted) {
       speech.cancel();
-      speech.setVolume(0.1);
+      speech.setVolume(0.01);
     } else {
       speech.setVolume(1);
     }
@@ -152,7 +153,7 @@ function Learn() {
   useEffect(() => {
     const fetchDataInterval = setInterval(() => {
       fetchData();
-    }, 6000000);
+    }, 60000);
 
     fetchData();
 
@@ -192,14 +193,14 @@ function Learn() {
       >
         <div style={{ paddingLeft: '10px', color: 'white' }}>
           <h1 style={{ color: 'purple' }}>{word}</h1>
-          <h4>{ipa}</h4>
+          <h3>{ipa}</h3>
         </div>
         <div
           style={{ paddingLeft: '25px', paddingRight: '10px', color: 'white' }}
         >
-          <p style={{ color: 'yellow' }}>*** {meaning}</p>
-          <p style={{ color: 'cyan' }}>** {examples} </p>
-          <p>** {translate}</p>
+          <p style={{ color: '#FFFF00' }}>{meaning}</p>
+          <p style={{ color: 'cyan' }}>{examples} </p>
+          <p>{translate}</p>
         </div>
       </Paper>
 
@@ -215,7 +216,7 @@ function Learn() {
           />
           <BottomNavigationAction
             label="Easiness"
-            icon={<SettingsIcon />}
+            icon={<ThumbsUpDownIcon />}
             onClick={handleEasinessEditOpen}
           />
           <Popover
@@ -230,6 +231,7 @@ function Learn() {
           >
             <Typography sx={{ p: 2 }}>Rate with your taste.</Typography>
             <Rating
+              sx={{ paddingLeft: 2, paddingRight: 2, paddingBottom: 2 }}
               name="simple-controlled"
               value={complexity}
               onChange={(event, newValue) => {
@@ -241,6 +243,7 @@ function Learn() {
               }}
             />
           </Popover>
+          <BottomNavigationAction label="Settings" icon={<GraphicEqIcon />} />
           <BottomNavigationAction
             label="Import"
             icon={<PublishIcon />}
