@@ -2,12 +2,14 @@
 /* eslint-disable no-console */
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   BottomNavigation,
   BottomNavigationAction,
   Box,
   Paper,
   Popover,
   Rating,
+  Snackbar,
   Typography,
 } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -53,6 +55,8 @@ function Learn() {
   );
 
   const [muted, setMuted] = useState<boolean>(false);
+
+  const [appNotifyOpen, setAppNotifyOpen] = React.useState<boolean>(false);
 
   const [word, setWord] = useState<string>('');
   const [ipa, setIpa] = useState<string>('');
@@ -128,6 +132,18 @@ function Learn() {
   const updateEasiness = (newValue: number) => {
     console.log(newValue);
     // call API here
+
+    setAppNotifyOpen(true);
+  };
+
+  const handleAppNotifyClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string,
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setAppNotifyOpen(false);
   };
 
   const open = Boolean(anchorEl);
@@ -150,6 +166,19 @@ function Learn() {
 
   return (
     <Box sx={{ pb: 7 }} ref={ref}>
+      <Snackbar
+        open={appNotifyOpen}
+        autoHideDuration={6000}
+        onClose={handleAppNotifyClose}
+      >
+        <Alert
+          onClose={handleAppNotifyClose}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
+          This is a success message!
+        </Alert>
+      </Snackbar>
       <Paper
         sx={{
           position: 'fixed',
