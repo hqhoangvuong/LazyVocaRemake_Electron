@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import {
   Alert,
   AlertColor,
@@ -7,21 +6,18 @@ import {
   Snackbar,
   TextField,
   CircularProgress,
-  FormControlLabel,
-  Checkbox,
 } from '@mui/material';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/auth.context';
 
-function Login() {
+function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [reenteredPassword, setReenteredPassword] = useState('');
 
   const [openAppNotify, setAppNotifyOpen] = React.useState<boolean>(false);
-
   const [appNotifyMsg, setAppNotifyMsg] = React.useState<string>('');
-
   const [appNotifySeverity, setAppNotifySeverity] =
     React.useState<AlertColor>();
 
@@ -41,25 +37,36 @@ function Login() {
     setAppNotifyOpen(false);
   };
 
-  const handleLogin = async () => {
-    if (
-      username == null ||
-      username.trim().length === 0 ||
-      password == null ||
-      password.trim().length === 0
-    ) {
-      setAppNotifyMsg('Username/Password is required.');
-      setAppNotifySeverity('warning');
-      setAppNotifyOpen(true);
-      return;
-    }
-
+  const handleRegister = async () => {
     try {
+      if (
+        username === null ||
+        username.trim().length === 0 ||
+        password === null ||
+        password.trim().length === 0 ||
+        reenteredPassword === null ||
+        reenteredPassword.trim().length === 0
+      ) {
+        setAppNotifyMsg('Username/Password is required.');
+        setAppNotifySeverity('warning');
+        return;
+      }
+
       setLoading(true);
+
+      // Check if passwords match
+      if (password !== reenteredPassword) {
+        setAppNotifyMsg('Passwords do not match.');
+        setAppNotifySeverity('warning');
+        setAppNotifyOpen(true);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(
         'http://103-195-7-220.cloud-xip.com:1027/api/Auth',
         {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -67,13 +74,29 @@ function Login() {
         },
       );
 
-      const data = await response.json();
+      if (response.status === 204) {
+        const loginResponse = await fetch(
+          'http://103-195-7-220.cloud-xip.com:1027/api/Auth',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+          },
+        );
 
-      if (response.status === 200 && data) {
-        login(data.token);
-        navigate('/learn');
+        const loginData = await loginResponse.json();
+
+        if (loginResponse.status === 200 && loginData) {
+          login(loginData.token);
+          navigate('/learn');
+        }
+      } else if (response.status === 409) {
+        setAppNotifyMsg('Registration failed: Your username had been used');
+        setAppNotifySeverity('warning');
       } else {
-        setAppNotifyMsg('Login failed');
+        setAppNotifyMsg('Registration failed');
         setAppNotifySeverity('warning');
       }
     } catch (error) {
@@ -120,7 +143,7 @@ function Login() {
             {appNotifyMsg}
           </Alert>
         </Snackbar>
-        <h1 style={{ color: 'gray' }}>Welcome</h1>
+        <h1 style={{ color: 'gray' }}>Register</h1>
         <TextField
           required
           label="User name"
@@ -141,14 +164,20 @@ function Login() {
           onChange={(e) => setPassword(e.target.value)}
           style={inputStyle}
         />
-        {/* <FormControlLabel
+        <TextField
+          required
+          label="Re-enter Password"
+          type="password"
+          variant="outlined"
+          name="reenteredPassword"
+          value={reenteredPassword}
+          onChange={(e) => setReenteredPassword(e.target.value)}
           style={inputStyle}
-          label="Keep me logged in"
-          control={<Checkbox />}
-        /> */}
-        <Button variant="contained" color="primary" onClick={handleLogin}>
-          Login
+        />
+        <Button variant="contained" color="primary" onClick={handleRegister}>
+          Register
         </Button>
+
         <div
           style={{
             display: 'flex',
@@ -157,11 +186,11 @@ function Login() {
             alignItems: 'center',
           }}
         >
-          <Link to="/register">Or click here to Sign in</Link>
+          <Link to="/">Or go back to login</Link>
         </div>
       </form>
     </div>
   );
 }
 
-export default Login;
+export default Register;

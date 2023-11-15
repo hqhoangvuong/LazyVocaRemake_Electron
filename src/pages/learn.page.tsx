@@ -6,9 +6,18 @@ import {
   BottomNavigation,
   BottomNavigationAction,
   Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  MenuItem,
   Paper,
   Popover,
   Rating,
+  Select,
+  SelectChangeEvent,
+  Slider,
   Snackbar,
   Typography,
 } from '@mui/material';
@@ -27,22 +36,29 @@ import './learn.page.css';
 
 const speech = new Speech();
 
+let voices: {
+  voiceURI: string;
+  name: string;
+  lang: string;
+  default: boolean;
+}[] = [];
+
 speech
   .init({
     volume: 1,
     lang: 'en-GB',
-    rate: 0.9,
-    voice: 'Microsoft Susan - English (United Kingdom)',
+    rate: 0.7,
     pitch: 1,
     splitSentences: true,
     listeners: {
-      onvoiceschanged: (voices: string) => {
-        console.log('Event voiceschanged', voices);
+      onvoiceschanged: (newVoices: string) => {
+        console.log('Event voiceschanged', newVoices);
       },
     },
   })
   .then((data: any) => {
-    console.log('Speech is ready, voices are available', data);
+    voices = data.voices;
+    console.log(voices);
   })
   .catch((e: any) => {
     console.error('An error occured while initializing : ', e);
@@ -59,6 +75,12 @@ function Learn() {
 
   const [appNotifyOpen, setAppNotifyOpen] = React.useState<boolean>(false);
 
+  const [appNotifyMsg, setAppNotifyMsg] = React.useState<string>('');
+
+  const [appNotifySeverity, setAppNotifySeverity] =
+    React.useState<AlertColor>();
+
+  const [id, setId] = useState<string>('');
   const [word, setWord] = useState<string>('');
   const [ipa, setIpa] = useState<string>('');
   const [meaning, setMeaning] = useState<string>('');
@@ -67,21 +89,38 @@ function Learn() {
   const [complexity, setComplexcity] = useState<number>(0);
   const [moveNext, setMoveNext] = useState<number>(0);
 
+  const [openVoiceSetting, setOpenVoiceSetting] =
+    React.useState<boolean>(false);
+
+  const [voiceSpeed, setVoiceSpeed] = useState<number>(10);
+  const [voiceLanguage, setVoiceLanguage] = useState<string>('en-US');
+  const [voiceName, setVocieName] = useState<string>();
+  const [voicePitch, setVoicePitch] = useState<number>(10);
+
   const { token } = useAuth();
 
   const toggleMute = () => {
     setMuted(!muted);
     if (!muted) {
-      speech.cancel();
-      speech.setVolume(0.01);
+      // speech.cancel();
+      // speech.setVolume(0.01);
+
+      window.electron.ipcRenderer.audioMuted();
     } else {
-      speech.setVolume(1);
+      // speech.setVolume(1);
+      window.electron.ipcRenderer.audioUnmuted();
     }
   };
 
   const importNavigate = () => {
     navigate('/import');
   };
+
+  function timeout(delay: number) {
+    return new Promise((res) => {
+      setTimeout(res, delay);
+    });
+  }
 
   const fetchData = async () => {
     console.log('Fetching data');
@@ -96,6 +135,7 @@ function Learn() {
       );
 
       if (response.status === 200) {
+        setId(response.data.id);
         setWord(response.data.word);
         setIpa(response.data.ipa);
         setMeaning(response.data.meaning);
@@ -113,6 +153,9 @@ function Learn() {
         });
 
         console.log('End of fetch');
+
+        await timeout(12000);
+
         setMoveNext(moveNext + 1);
       }
     } catch (error) {
@@ -130,9 +173,28 @@ function Learn() {
     setAnchorEl(null);
   };
 
-  const updateEasiness = (newValue: number) => {
-    console.log(newValue);
-    // call API here
+  const updateEasiness = async (newValue: number) => {
+    setComplexcity(newValue);
+
+    const response = await fetch(
+      `http://103-195-7-220.cloud-xip.com:1027/api/Vocabulary/update-easiness/${id}/${newValue}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (response.status === 204) {
+      setAppNotifySeverity('success');
+      setAppNotifyMsg(`Easiness was successfully set to ${newValue}`);
+    } else {
+      setAppNotifySeverity('error');
+      setAppNotifyMsg(
+        `One or more errors occured. Please contact administrator.`,
+      );
+    }
 
     setAppNotifyOpen(true);
   };
@@ -147,8 +209,51 @@ function Learn() {
     setAppNotifyOpen(false);
   };
 
+  const handleVoiceSettingOpen = () => {
+    setOpenVoiceSetting(true);
+  };
+
+  const handleVoiceSettingClose = () => {
+    setOpenVoiceSetting(false);
+  };
+
+  const handleVoiceSpeedSettingChanged = (
+    event: Event,
+    newValue: number | number[],
+  ) => {
+    setVoiceSpeed(newValue as number);
+  };
+
+  const handleVoicePitchSettingChanged = (
+    event: Event,
+    newValue: number | number[],
+  ) => {
+    setVoicePitch(newValue as number);
+  };
+
+  const handleVoiceNameChanged = (event: SelectChangeEvent) => {
+    setVocieName(event.target.value);
+    setVoiceLanguage(
+      voices.find((v) => v.name === event.target.value)?.lang ?? 'en-US',
+    );
+
+    console.log(`new voice ${voiceName}, new language ${voiceLanguage}`);
+  };
+
+  const handleVoiceSettingSaveClick = () => {
+    speech.setRate(voiceSpeed / 10);
+    speech.setVoice(voiceName);
+    speech.setLanguage(voiceLanguage);
+
+    setAppNotifySeverity('success');
+    setAppNotifyMsg('Your changes will take effect after this word');
+
+    setOpenVoiceSetting(false);
+    setAppNotifyOpen(true);
+  };
+
   const open = Boolean(anchorEl);
-  const id = open ? 'simple-popover' : undefined;
+  const popoverId = open ? 'simple-popover' : undefined;
 
   useEffect(() => {
     const fetchDataInterval = setInterval(() => {
@@ -166,93 +271,158 @@ function Learn() {
   const ref = React.useRef<HTMLDivElement>(null);
 
   return (
-    <Box sx={{ pb: 7 }} ref={ref}>
-      <Snackbar
-        open={appNotifyOpen}
-        autoHideDuration={6000}
-        onClose={handleAppNotifyClose}
-      >
-        <Alert
+    <>
+      <Box sx={{ pb: 7 }} ref={ref}>
+        <Snackbar
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          open={appNotifyOpen}
+          autoHideDuration={3000}
           onClose={handleAppNotifyClose}
-          severity="success"
-          sx={{ width: '100%' }}
         >
-          This is a success message!
-        </Alert>
-      </Snackbar>
-      <Paper
-        sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '100%',
-          backgroundColor: 'transparent',
-        }}
-        elevation={3}
-      >
-        <div style={{ paddingLeft: '10px', color: 'white' }}>
-          <h2 style={{ color: 'purple' }}>{word}</h2>
-          <p style={{ color: '#656565' }}>{ipa}</p>
-        </div>
-        <div
-          style={{ paddingLeft: '25px', paddingRight: '10px', color: 'white' }}
+          <Alert
+            variant="filled"
+            onClose={handleAppNotifyClose}
+            severity={appNotifySeverity}
+            sx={{ width: '100%' }}
+          >
+            {appNotifyMsg}
+          </Alert>
+        </Snackbar>
+        <Paper
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '100%',
+            backgroundColor: 'transparent',
+          }}
+          elevation={3}
         >
-          <p style={{ color: '#6A359D' }}>{meaning}</p>
-          <p style={{ color: '#1D3C8E' }}>{examples} </p>
-          <p style={{ color: '#177245' }}>{translate}</p>
-        </div>
-      </Paper>
-
-      <Paper
-        sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
-        elevation={3}
-      >
-        <BottomNavigation showLabels>
-          <BottomNavigationAction
-            label={muted ? 'Unmute' : 'Mute'}
-            icon={muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-            onClick={toggleMute}
-          />
-          <BottomNavigationAction
-            label="Easiness"
-            icon={<ThumbsUpDownIcon />}
-            onClick={handleEasinessEditOpen}
-          />
-          <Popover
-            id={id}
-            open={open}
-            anchorEl={anchorEl}
-            onClose={handleEasinessEditClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
+          <div style={{ paddingLeft: '10px', color: 'white' }}>
+            <h2 style={{ color: 'purple' }}>{word}</h2>
+            <p style={{ color: '#656565' }}>{ipa}</p>
+          </div>
+          <div
+            style={{
+              paddingLeft: '25px',
+              paddingRight: '10px',
+              color: 'white',
             }}
           >
-            <Typography sx={{ p: 2 }}>Rate with your taste.</Typography>
-            <Rating
-              sx={{ paddingLeft: 2, paddingRight: 2, paddingBottom: 2 }}
-              name="simple-controlled"
-              value={complexity}
-              onChange={(event, newValue) => {
-                if (newValue) {
-                  updateEasiness(newValue);
-                  setComplexcity(newValue);
-                  handleEasinessEditClose();
-                }
-              }}
+            <p style={{ color: '#6A359D' }}>{meaning}</p>
+            <p style={{ color: '#1D3C8E' }}>
+              <i>{examples}</i>
+            </p>
+            <p style={{ color: '#177245' }}>{translate}</p>
+          </div>
+        </Paper>
+
+        <Paper
+          sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
+          elevation={3}
+        >
+          <BottomNavigation showLabels>
+            <BottomNavigationAction
+              label={muted ? 'Unmute' : 'Mute'}
+              icon={muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+              onClick={toggleMute}
             />
-          </Popover>
-          <BottomNavigationAction label="Settings" icon={<GraphicEqIcon />} />
-          <BottomNavigationAction
-            label="Import"
-            icon={<PublishIcon />}
-            onClick={importNavigate}
-          />
-          <BottomNavigationAction label="Improve" icon={<FeedbackIcon />} />
-        </BottomNavigation>
-      </Paper>
-    </Box>
+            <BottomNavigationAction
+              label="Easiness"
+              icon={<ThumbsUpDownIcon />}
+              onClick={handleEasinessEditOpen}
+            />
+            <Popover
+              id={popoverId}
+              open={open}
+              anchorEl={anchorEl}
+              onClose={handleEasinessEditClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+            >
+              <Typography sx={{ p: 2 }}>Rate with your taste.</Typography>
+              <Rating
+                sx={{ paddingLeft: 2, paddingRight: 2, paddingBottom: 2 }}
+                name="simple-controlled"
+                value={complexity}
+                onChange={(event, newValue) => {
+                  if (newValue) {
+                    updateEasiness(newValue);
+                    setComplexcity(newValue);
+                    handleEasinessEditClose();
+                  }
+                }}
+              />
+            </Popover>
+            <BottomNavigationAction
+              label="Settings"
+              icon={<GraphicEqIcon />}
+              onClick={handleVoiceSettingOpen}
+            />
+            <BottomNavigationAction
+              label="Import"
+              icon={<PublishIcon />}
+              onClick={importNavigate}
+            />
+            <BottomNavigationAction label="Improve" icon={<FeedbackIcon />} />
+          </BottomNavigation>
+        </Paper>
+      </Box>
+      <Dialog open={openVoiceSetting} onClose={handleVoiceSettingClose}>
+        <DialogTitle>Speaker voice setting</DialogTitle>
+        <DialogContent sx={{ m: 1, minWidth: 250 }}>
+          <Select
+            value={
+              voiceName ??
+              voices.find((v) => v.default === true)?.voiceURI ??
+              ''
+            }
+            onChange={handleVoiceNameChanged}
+            sx={{ marginBottom: 1, minWidth: 250 }}
+          >
+            {voices.map((voice) => (
+              <MenuItem key={voice.voiceURI} value={voice.name}>
+                {voice.name.split(' - ')[0]}
+              </MenuItem>
+            ))}
+          </Select>
+
+          <Box>
+            <Typography gutterBottom>Speed</Typography>
+            <Slider
+              aria-label="Speed"
+              value={voiceSpeed}
+              valueLabelDisplay="auto"
+              step={1}
+              marks
+              min={0}
+              max={10}
+              onChange={handleVoiceSpeedSettingChanged}
+            />
+          </Box>
+          <Box>
+            <Typography gutterBottom>Pitch</Typography>
+            <Slider
+              aria-label="Pitch"
+              value={voicePitch}
+              valueLabelDisplay="auto"
+              step={1}
+              marks
+              min={0}
+              max={10}
+              onChange={handleVoicePitchSettingChanged}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleVoiceSettingClose}>Cancel</Button>
+          <Button onClick={handleVoiceSettingSaveClick}>Save</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
 

@@ -27,6 +27,12 @@ const electronHandler = {
     resizeWindowToLearn() {
       ipcRenderer.send('ipc-change-windows-size-learn');
     },
+    audioMuted() {
+      ipcRenderer.send('ipc-change-muted');
+    },
+    audioUnmuted() {
+      ipcRenderer.send('ipc-change-unmuted');
+    },
   },
 };
 

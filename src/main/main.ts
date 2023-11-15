@@ -44,6 +44,15 @@ ipcMain.on('ipc-change-windows-size-learn', async (event, arg) => {
   mainWindow?.setSize(400, 450);
   mainWindow?.setPosition(width - 400, height - 450);
 });
+
+ipcMain.on('ipc-change-muted', async (event, arg) => {
+  mainWindow?.webContents.setAudioMuted(true);
+});
+
+ipcMain.on('ipc-change-unmuted', async (event, arg) => {
+  mainWindow?.webContents.setAudioMuted(false);
+});
+
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
