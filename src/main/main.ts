@@ -15,6 +15,8 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
+const express = require('../server/server.ts');
+
 class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -159,6 +161,7 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+    // express();
     createWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
