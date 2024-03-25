@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  AlertColor,
   BottomNavigation,
   BottomNavigationAction,
   Box,
@@ -47,7 +48,7 @@ speech
   .init({
     volume: 1,
     lang: 'en-GB',
-    rate: 0.7,
+    rate: 1,
     pitch: 1,
     splitSentences: true,
     listeners: {
@@ -57,7 +58,9 @@ speech
     },
   })
   .then((data: any) => {
-    voices = data.voices;
+    voices = data.voices.filter(
+      (voice: any) => voice.lang === 'en-US' || voice.lang === 'en-GB',
+    );
     console.log(voices);
   })
   .catch((e: any) => {

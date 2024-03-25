@@ -9,9 +9,11 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, screen, ipcRenderer } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import { spawn } from 'child_process';
+import { Readable } from 'stream';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
@@ -23,7 +25,28 @@ class AppUpdater {
   }
 }
 
+let appName;
+if (process.platform === 'win32') {
+  appName = app.getPath('exe');
+} else if (process.platform === 'darwin') {
+  appName = path.join(
+    app.getPath('appData'),
+    app.getName(),
+    'MacOS',
+    app.getName(),
+  );
+} else {
+  appName = app.getAppPath();
+}
+
 let mainWindow: BrowserWindow | null = null;
+
+const { isPackaged } = app;
+const serverLog = document.getElementById("serverLog");
+
+const expressPath = isPackaged
+  ? path.join('./resources/app.asar', './dist/src/server/express-app.js')
+  : './dist/src/server/express-app.js';
 
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
@@ -53,6 +76,13 @@ ipcMain.on('ipc-change-unmuted', async (event, arg) => {
   mainWindow?.webContents.setAudioMuted(false);
 });
 
+ipcRenderer.on("server-log-entry", (_event, data) => {
+	let infoSpan = document.createElement("span");
+	infoSpan.textContent = data;
+	serverLog!.append(infoSpan);
+	serverLog!.append(document.createElement("br"));
+  );
+
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
@@ -78,10 +108,40 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
+function stripAnsiColors(text: string): string {
+  return text.replace(
+    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+    '',
+  );
+}
+
+function redirectOutput(stream: Readable) {
+  stream.on('data', (data: any) => {
+    if (!mainWindow) return;
+    data
+      .toString()
+      .split('\n')
+      .forEach((line: string) => {
+        if (line !== '') {
+          mainWindow!.webContents.send(
+            'server-log-entry',
+            stripAnsiColors(line),
+          );
+        }
+      });
+  });
+}
+
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
+
+  const expressAppProcess = spawn(appName, [expressPath], {
+    env: { ELECTRON_RUN_AS_NODE: '1' },
+  });
+
+  [expressAppProcess.stdout, expressAppProcess.stderr].forEach(redirectOutput);
 
   const RESOURCES_PATH = app.isPackaged
     ? path.join(process.resourcesPath, 'assets')
@@ -128,6 +188,7 @@ const createWindow = async () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    expressAppProcess.kill();
   });
 
   const menuBuilder = new MenuBuilder(mainWindow);

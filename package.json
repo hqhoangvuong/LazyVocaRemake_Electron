@@ -1,4 +1,5 @@
 {
+  "name": "lazyvoca",
   "description": "A foundation for scalable desktop apps",
   "keywords": [
     "electron",
@@ -100,8 +101,11 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.16",
+    "@types/npm": "^7.19.3",
+    "aws-sdk": "^2.1520.0",
     "axios": "^1.6.0",
     "bluebird": "^3.7.2",
+    "bufferutil": "^4.0.8",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.8",
     "electron-store": "^8.1.0",
@@ -110,6 +114,9 @@
     "json5": "^2.2.3",
     "mongodb": "^6.2.0",
     "node-gtts": "^2.0.2",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "pcm-util": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.18.0",
@@ -117,6 +124,8 @@
     "realm-web": "^2.0.0",
     "say": "^0.16.0",
     "speak-tts": "^2.0.8",
+    "speaker": "^0.5.4",
+    "stream-browserify": "^3.0.0",
     "tts-react": "^3.0.2"
   },
   "devDependencies": {

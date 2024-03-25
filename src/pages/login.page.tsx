@@ -7,8 +7,6 @@ import {
   Snackbar,
   TextField,
   CircularProgress,
-  FormControlLabel,
-  Checkbox,
 } from '@mui/material';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
